@@ -44,7 +44,6 @@ async def login_once():
 async def fetch_and_send():
     print(f"[{datetime.now()}] 開始抓取最近 4 小時 Crypto & AI 熱點...")
 
-    # 計算 4 小時前的時間
     since_time = (datetime.utcnow() - timedelta(hours=4)).strftime("%Y-%m-%d_%H:%M:%S_UTC")
     query = f"(crypto OR bitcoin OR ethereum OR solana OR ai OR grok OR xai OR llm OR 比特幣 OR 以太坊 OR 人工智慧) since:{since_time}"
 
@@ -54,7 +53,6 @@ async def fetch_and_send():
         print("這 4 小時沒有新熱點")
         return
 
-    # 整理推文給 Gemini
     posts_text = "\n\n".join([
         f"作者: @{t.user.username}\n時間: {t.date}\n內容: {t.rawContent}\n曝光: {t.viewCount:,} | 讚: {t.likeCount}\n連結: {t.url}"
         for t in tweets[:30]
@@ -81,4 +79,31 @@ async def fetch_and_send():
             model="gemini-2.0-flash",
             contents=prompt
         )
-       
+        summary_text = response.text
+    except Exception as e:
+        summary_text = f"❌ Gemini 整理失敗：{str(e)}\n\n抓到推文數：{len(tweets)}"
+
+    # 發送到 Telegram
+    try:
+        bot = telegram.Bot(token=TELEGRAM_TOKEN)
+        await bot.send_message(
+            chat_id=TELEGRAM_CHAT_ID,
+            text=summary_text,
+            parse_mode="HTML"
+        )
+        print(f"[{datetime.now()}] ✅ 摘要已成功發送到 Telegram")
+    except Exception as e:
+        print(f"[{datetime.now()}] ❌ Telegram 發送失敗：{str(e)}")
+
+async def main():
+    await login_once()
+    await fetch_and_send()
+    scheduler.add_job(fetch_and_send, 'interval', hours=4)
+    scheduler.start()
+    print("🤖 Bot 已啟動，每 4 小時自動執行一次...")
+
+    while True:
+        await asyncio.sleep(3600)
+
+if __name__ == "__main__":
+    asyncio.run(main())
