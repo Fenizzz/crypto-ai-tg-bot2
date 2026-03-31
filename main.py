@@ -10,13 +10,13 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 # ====================== 臨時寫死變數（測試用） ======================
 # ←←← 在這裡填你的真實資料 ←←←
-X_USERNAME = os.getenv("lmaongchi")
-X_PASSWORD = os.getenv("Lmaongchi123@")
-X_EMAIL = os.getenv("lmaongchi@gmail.com")
+X_USERNAME = "lmaongchi"
+X_PASSWORD = "Lmaongchi123@"
+X_EMAIL = "lmaongchi@gmail.com"
 
-GEMINI_API_KEY = os.getenv("AIzaSyCHrDcXab742GW097ApwOx0c760t7hEBcM")
-TELEGRAM_TOKEN = os.getenv("8700350043:AAEWenpl6_MJFLwsj9KZBp-wSaW80RQKRAE")
-TELEGRAM_CHAT_ID = os.getenv("761195164")
+GEMINI_API_KEY = "AIzaSyCHrDcXab742GW097ApwOx0c760t7hEBcM"
+TELEGRAM_TOKEN = "8700350043:AAEWenpl6_MJFLwsj9KZBp-wSaW80RQKRAE"
+TELEGRAM_CHAT_ID = "761195164"
 
 # ====================== Debug 檢查 ======================
 print("🔍 DEBUG - 目前使用的變數:")
