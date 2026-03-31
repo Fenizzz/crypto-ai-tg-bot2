@@ -3,7 +3,8 @@ import os
 from datetime import datetime, timedelta
 from twscrape import API, gather
 from twscrape.logger import set_log_level
-import google.genai as genai   # ← 改用新套件
+import google.generativeai as genai
+genai.configure(api_key=GEMINI_API_KEY)
 import telegram
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dotenv import load_dotenv
@@ -50,9 +51,10 @@ async def fetch_and_send():
         for t in tweets
     ])
 
-    print(f"抓到 {len(tweets)} 則，正在讓 Gemini 整理...")
+        print(f"抓到 {len(tweets)} 則，正在讓 Gemini 整理...")
 
-    # Gemini 總結
+    # Gemini 舊版穩定寫法
+    genai.configure(api_key=GEMINI_API_KEY)
     model = genai.GenerativeModel('gemini-3-flash')
     prompt = f"""
 你是 crypto 和 AI 領域的專業分析師。
@@ -64,6 +66,9 @@ async def fetch_and_send():
 推文資料：
 {posts_text}
 """
+
+    response = model.generate_content(prompt)
+    summary_text = response.text
 
     response = model.generate_content(prompt)
     summary_text = response.text
