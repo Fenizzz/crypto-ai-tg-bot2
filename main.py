@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# ================== 設定 ==================
+# ================== 設定 + Debug ==================
 X_USERNAME = os.getenv("lmaongchi")
 X_PASSWORD = os.getenv("Lmaongchi123@")
 X_EMAIL = os.getenv("lmaongchi@gmail.com")
@@ -18,6 +18,18 @@ X_EMAIL = os.getenv("lmaongchi@gmail.com")
 GEMINI_API_KEY = os.getenv("AIzaSyCHrDcXab742GW097ApwOx0c760t7hEBcM")
 TELEGRAM_TOKEN = os.getenv("8700350043:AAEWenpl6_MJFLwsj9KZBp-wSaW80RQKRAE")
 TELEGRAM_CHAT_ID = os.getenv("761195164")
+
+# ←←← 這裡加 Debug，看 Railway 到底有沒有把變數傳進來
+print("🔍 DEBUG - Railway 環境變數檢查:")
+print(f"X_USERNAME = '{X_USERNAME}'")
+print(f"X_PASSWORD = {'已設定' if X_PASSWORD else '❌ 空的！'}")
+print(f"X_EMAIL    = '{X_EMAIL}'")
+print(f"GEMINI_API_KEY = {'已設定' if GEMINI_API_KEY else '❌ 空的！'}")
+print("-----------------------------------")
+
+if not X_USERNAME:
+    print("❌ X_USERNAME 是空的！請檢查 Railway Variables")
+    raise ValueError("X_USERNAME 必須設定")
 
 # Gemini 設定
 genai.configure(api_key=GEMINI_API_KEY)
@@ -51,7 +63,6 @@ async def fetch_and_send():
 
     print(f"抓到 {len(tweets)} 則，正在讓 Gemini 整理...")
 
-    # Gemini 總結
     model = genai.GenerativeModel('gemini-3-flash')
     prompt = f"""
 你是 crypto 和 AI 領域的專業分析師。
