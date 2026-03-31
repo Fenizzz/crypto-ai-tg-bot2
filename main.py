@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 from twscrape import API, gather
 from twscrape.logger import set_log_level
 import google.generativeai as genai
-genai.configure(api_key=GEMINI_API_KEY)
 import telegram
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dotenv import load_dotenv
@@ -20,14 +19,13 @@ GEMINI_API_KEY = os.getenv("AIzaSyCHrDcXab742GW097ApwOx0c760t7hEBcM")
 TELEGRAM_TOKEN = os.getenv("8700350043:AAEWenpl6_MJFLwsj9KZBp-wSaW80RQKRAE")
 TELEGRAM_CHAT_ID = os.getenv("761195164")
 
-# Gemini 新套件設定
+# Gemini 設定
 genai.configure(api_key=GEMINI_API_KEY)
 
 set_log_level("INFO")
 api = API()
 scheduler = AsyncIOScheduler()
 
-# ================== 登入只做一次（重要修正） ==================
 async def login_once():
     print("正在登入 X 帳號...")
     await api.pool.add_account(X_USERNAME, X_PASSWORD, X_EMAIL, X_EMAIL)
@@ -36,7 +34,7 @@ async def login_once():
 
 async def fetch_and_send():
     print(f"[{datetime.now()}] 開始抓取最近 4 小時熱點...")
-    
+
     since_time = (datetime.utcnow() - timedelta(hours=4)).strftime("%Y-%m-%d_%H:%M:%S_UTC")
     query = f"(crypto OR bitcoin OR ethereum OR solana OR ai OR grok OR xai OR llm OR 比特幣 OR 以太坊 OR 人工智慧) since:{since_time}"
 
@@ -51,10 +49,9 @@ async def fetch_and_send():
         for t in tweets
     ])
 
-        print(f"抓到 {len(tweets)} 則，正在讓 Gemini 整理...")
+    print(f"抓到 {len(tweets)} 則，正在讓 Gemini 整理...")
 
-    # Gemini 舊版穩定寫法
-    genai.configure(api_key=GEMINI_API_KEY)
+    # Gemini 總結
     model = genai.GenerativeModel('gemini-3-flash')
     prompt = f"""
 你是 crypto 和 AI 領域的專業分析師。
@@ -70,16 +67,13 @@ async def fetch_and_send():
     response = model.generate_content(prompt)
     summary_text = response.text
 
-    response = model.generate_content(prompt)
-    summary_text = response.text
-
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=summary_text, parse_mode="HTML")
     print(f"[{datetime.now()}] ✅ 摘要已發送到 Telegram")
 
 async def main():
-    await login_once()                    # 啟動時只登入一次
-    await fetch_and_send()                # 第一次立即執行
+    await login_once()
+    await fetch_and_send()
     scheduler.add_job(fetch_and_send, 'interval', hours=4)
     scheduler.start()
     print("🤖 Bot 已啟動，每 4 小時自動執行...")
