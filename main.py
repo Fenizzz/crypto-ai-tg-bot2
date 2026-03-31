@@ -10,7 +10,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dotenv import load_dotenv
 
 # ====================== 載入 .env (優先) ======================
-load_dotenv(override=True)  # override=True 讓 .env 覆蓋 Railway 變數
+#load_dotenv(override=True)  # override=True 讓 .env 覆蓋 Railway 變數
 
 # ====================== 環境變數 ======================
 X_USERNAME = os.getenv("lmaongchi")
