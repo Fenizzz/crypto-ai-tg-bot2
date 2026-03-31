@@ -1,0 +1,5 @@
+twscrape
+python-telegram-bot
+apscheduler
+python-dotenv
+google-generativeai
