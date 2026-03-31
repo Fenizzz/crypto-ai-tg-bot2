@@ -1,15 +1,13 @@
 import asyncio
-import os
 from datetime import datetime, timedelta
 
 from twscrape import API, gather
 from twscrape.logger import set_log_level
-from google import genai  # ← 新版 Gemini SDK
+from google import genai
 import telegram
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-# ====================== 臨時寫死變數（測試用） ======================
-# ←←← 確認這些值正確 ←←←
+# ====================== 變數設定 ======================
 X_USERNAME = "lmaongchi"
 X_PASSWORD = "Lmaongchi123@"
 X_EMAIL    = "lmaongchi@gmail.com"
@@ -30,7 +28,7 @@ print("-----------------------------------")
 if not X_USERNAME or not X_PASSWORD or not GEMINI_API_KEY or not TELEGRAM_TOKEN:
     raise ValueError("❌ 某些必要變數是空的，請確認已正確填入！")
 
-# ====================== Gemini 設定（新版 SDK） ======================
+# ====================== Gemini 設定 ======================
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 set_log_level("INFO")
@@ -46,4 +44,41 @@ async def login_once():
 async def fetch_and_send():
     print(f"[{datetime.now()}] 開始抓取最近 4 小時 Crypto & AI 熱點...")
 
-    since_time = (datetime.utcnow() - timedelta(hours=4)).strftime("%
+    # 計算 4 小時前的時間
+    since_time = (datetime.utcnow() - timedelta(hours=4)).strftime("%Y-%m-%d_%H:%M:%S_UTC")
+    query = f"(crypto OR bitcoin OR ethereum OR solana OR ai OR grok OR xai OR llm OR 比特幣 OR 以太坊 OR 人工智慧) since:{since_time}"
+
+    tweets = await gather(api.search(query, limit=40))
+
+    if not tweets:
+        print("這 4 小時沒有新熱點")
+        return
+
+    # 整理推文給 Gemini
+    posts_text = "\n\n".join([
+        f"作者: @{t.user.username}\n時間: {t.date}\n內容: {t.rawContent}\n曝光: {t.viewCount:,} | 讚: {t.likeCount}\n連結: {t.url}"
+        for t in tweets[:30]
+    ])
+
+    print(f"抓到 {len(tweets)} 則推文，正在讓 Gemini 整理...")
+
+    prompt = f"""
+你是 Crypto 和 AI 領域的專業分析師，請用繁體中文整理以下最近 4 小時的 X 推文。
+
+請輸出以下格式：
+**Crypto & AI 每4小時熱點摘要**（{datetime.now().strftime('%Y-%m-%d %H:%M')}）
+
+1. **Top 熱點**（挑選 5-8 則最重要）
+   - [曝光量] 簡短重點 + 連結
+2. **潛在機會 / 風險提醒**
+
+推文資料：
+{posts_text}
+"""
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt
+        )
+       
